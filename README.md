@@ -48,7 +48,7 @@ POST /upload ──► save to disk ──► create job (SQLite) ──► queu
                                                                    ▼
                                               extract text → chunk → embed → store in Chroma
                                                                    │
-GET /status/{job_id} ◄────────────────────────────────────────────┘  (poll for job status)
+GET /status/{job_id} ◄─────────────────────────────────────────────┘  (poll for job status)
 
 Question (+ optional session_id)
    │
