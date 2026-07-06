@@ -3,6 +3,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
 from app.core.config import settings
@@ -29,3 +30,9 @@ app.include_router(router)
 def health():
     """Liveness/readiness probe for load balancers and orchestrators."""
     return {"status": "ok"}
+
+
+# Mounted last and at "/" so it only catches requests that didn't match
+# an API route above (e.g. "/", "/index.html") — API paths like /chat
+# and /upload are matched first since they were registered earlier.
+app.mount("/", StaticFiles(directory="app/static", html=True), name="static")

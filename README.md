@@ -27,6 +27,8 @@ FastAPI surface.
   and follow-up questions ("what about last year?") are rewritten into
   standalone queries before retrieval, so vector search isn't thrown off
   by missing context
+- A minimal built-in frontend (`/`) — upload documents and chat with them
+  in the browser, no separate hosting or build step required
 - OpenRouter integration for multi-model access (swap models via one env
   var — GPT, Claude, Llama, etc.)
 - Retry with exponential backoff on embedding/completion calls
@@ -48,7 +50,7 @@ POST /upload ──► save to disk ──► create job (SQLite) ──► queu
                                                                    ▼
                                               extract text → chunk → embed → store in Chroma
                                                                    │
-GET /status/{job_id} ◄─────────────────────────────────────────────┘  (poll for job status)
+GET /status/{job_id} ◄────────────────────────────────────────────┘  (poll for job status)
 
 Question (+ optional session_id)
    │
@@ -142,6 +144,8 @@ Interactive docs available at `/docs` once the server is running.
 - Pydantic
 - SQLite for job tracking and chat history
 - Python 3.12+
+- Frontend: single-file HTML/CSS/vanilla JS, served by FastAPI's
+  `StaticFiles` — no build step, no separate deploy
 
 ## Running Locally
 
@@ -154,6 +158,8 @@ pip install -r requirements.txt
 
 uvicorn app.main:app --reload
 ```
+
+Open `http://localhost:8000` for the built-in UI, or `http://localhost:8000/docs` to use the API directly.
 
 ## Running with Docker
 
