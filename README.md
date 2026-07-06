@@ -168,6 +168,67 @@ The service is then available at `http://localhost:8000`. Uploaded files,
 the Chroma index, and the SQLite database (jobs + chat history) persist in
 `./data` on the host.
 
+## Deploying to a Cloud Host
+
+This service writes to disk (SQLite for job tracking and chat history,
+Chroma for the vector index), so where that data lives depends on the
+host and plan you pick.
+
+### Render
+
+1. Push this repo to GitHub.
+2. In the Render dashboard: **New → Blueprint**, point it at the repo.
+   `render.yaml` (included) defines the web service on the free plan and
+   reads `Dockerfile` to build.
+3. Set `OPENROUTER_API_KEY` as a secret env var in the Render dashboard
+   (not committed to the repo).
+4. Deploy. Render builds the Dockerfile and gives you a public URL.
+
+**Free-tier tradeoff:** Render's free plan doesn't support persistent
+disks. `data/` lives on the container's local filesystem, which is wiped
+on every redeploy **and** every time the service spins back up after
+going idle (free services sleep after ~15 minutes of inactivity). In
+practice: uploads, the index, and chat sessions survive while the service
+is actively being used, but expect to re-upload documents and lose old
+conversations after a period of inactivity or a redeploy. Reasonable for
+a portfolio demo; upgrade to a paid plan and add a `disk:` block back to
+`render.yaml` if you need real persistence.
+
+### Fly.io
+
+1. Install the `flyctl` CLI and run `fly auth login`.
+2. From the project root: `fly launch` — it'll detect the `Dockerfile`
+   and the included `fly.toml`. Say no to a Postgres/Redis add-on
+   (not needed).
+3. Create and attach a volume for persistent data:
+   ```bash
+   fly volumes create data --size 1 --region <your-region>
+   ```
+   (`fly.toml` already declares the mount at `/code/data`.)
+4. Set your API key as a secret (never put it in `fly.toml`):
+   ```bash
+   fly secrets set OPENROUTER_API_KEY=sk-or-v1-...
+   ```
+5. Deploy:
+   ```bash
+   fly deploy
+   ```
+
+Fly's free allowance covers small always-on instances plus a small
+volume, so uploads, the index, and chat history actually persist here
+without upgrading.
+
+### Either way
+
+- Set `CORS_ORIGINS` in your platform's env vars to your actual frontend
+  domain once you have one — leaving it as `*` is fine for testing, not
+  for a public deployment.
+- The `/health` endpoint is what most platforms will hit to confirm the
+  service is alive — already wired up.
+- There's no auth on `/upload` or `/chat` — anyone with the URL can use
+  (and pay for, via your API key) the service. Fine for a private demo
+  link, not for anything public-facing without adding an API key check.
+
 ## Testing
 
 ```bash
@@ -206,4 +267,3 @@ chat history settings.
 - No document-type-specific parsing yet (e.g. table extraction) — plain
   text extraction only.
 - Chat history has no expiry/cleanup — sessions accumulate indefinitely.
-# rag-service

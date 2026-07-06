@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: rag-knowledge-assistant
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false # set manually in the Render dashboard, never commit this
+      - key: CORS_ORIGINS
+        value: "*"
+    # NOTE: persistent disks aren't available on Render's free tier.
+    # data/ (SQLite jobs + chat history, and the Chroma index) lives on
+    # the container's local filesystem and is wiped on every redeploy
+    # and every time the service spins back up from sleep after
+    # inactivity. Fine for a demo where you re-upload documents each
+    # session; upgrade to a paid plan and add a `disk:` block if you
+    # need it to persist.

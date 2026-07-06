@@ -1,0 +1,10 @@
+services:
+  rag-service:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/code/data
+    restart: unless-stopped
